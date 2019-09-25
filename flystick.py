@@ -1,3 +1,4 @@
+#!/usr/bin/python
 """
 flystick - python script to control an RC plane with a USB joystick.
 Copyright (C) 2016 Janne Savukoski
@@ -128,13 +129,17 @@ def main():
 
         elif pigpio:
             pulses, pos = [], 0
+            print " "
             for value in _output:
                 # calibrated with Taranis to [-99.6..0..99.4]
-                us = int(round(1333 + 453 * value))
+                # us = int(round(750 + 300 * value))
+                us = int(round(757 + 203 * value))
                 pulses += [pigpio.pulse(0, pi_gpio, 300),
                            pigpio.pulse(pi_gpio, 0, us - 300)]
                 pos += us
+                print us,value
 
+            # subcycle_time_us = 20k
             pulses += [pigpio.pulse(0, pi_gpio, 300),
                        pigpio.pulse(pi_gpio, 0, 20000 - 300 - pos - 1)]
 

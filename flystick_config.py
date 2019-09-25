@@ -24,22 +24,20 @@ PPM_OUTPUT_PIN = 18
 # Output (PPM) channels.
 CHANNELS = (
     # channel 1: aileron with trim
-    joystick.axis(0) + ail_trim * 0.5,
+    # joystick.axis(0) + ail_trim * 0.5,
+    joystick.axis(0), # roll
+    joystick.axis(1), # pitch
     # a more elaborate example with reverse, offset, weight and trim:
     #(-joystick.axis(0) + 0.1) * 0.7 + ail_trim * 0.5,
     # channel 2: elevator (reversed)
-    -joystick.axis(1),
+    -throttles.axis(3), # throttle
+    # -joystick.axis(1),
     # channel 3: throttle (reversed)
-    -throttles.axis(2),
-    -throttles.axis(0),
     # channel 4: flight mode
     # hat up-down axis, 5 states to match scrollphat vertical resolution
-    joystick.hat_switch(hat=0, axis=1, positions=5),
+    # joystick.hat_switch(hat=0, axis=1, positions=5),
     # channels 5-8: buttons demo
-    joystick.button(0),
-    joystick.button(1),
-    joystick.button(2),
-    joystick.button(3),
+    throttles.button(23),
 )
 
 # dual-channel display component
