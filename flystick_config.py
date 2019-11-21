@@ -14,7 +14,8 @@ if throttles.get_name() != "Thrustmaster Throttle - HOTAS Warthog":
     joystick = Joystick(0)
 
 # aileron trim, hat side-to-side axis
-ail_trim = joystick.hat_switch(hat=0, axis=0, positions=41, initial=20)
+roll_trim = joystick.hat_switch(hat=0, axis=0, positions=41, initial=20)
+pitch_trim = joystick.hat_switch(hat=0, axis=1, positions=41, initial=20)
 
 # Raspberry Pi GPIO pin where to output the PPM signal.
 # Pin map: http://wiki.mchobby.be/images/3/31/RASP-PIZERO-Correspondance-GPIO.jpg
@@ -25,10 +26,10 @@ PPM_OUTPUT_PIN = 18
 CHANNELS = (
     # channel 1: aileron with trim
     # joystick.axis(0) + ail_trim * 0.5,
-    joystick.axis(0), # roll
-    joystick.axis(1), # pitch
+    (-joystick.axis(0) + 0.1) * 0.7 + roll_trim * 0.5, # roll
+    (-joystick.axis(0) + 0.1) * 0.7 + pitch_trim * 0.5, # pitch
     # a more elaborate example with reverse, offset, weight and trim:
-    #(-joystick.axis(0) + 0.1) * 0.7 + ail_trim * 0.5,
+    # (-joystick.axis(0) + 0.1) * 0.7 + ail_trim * 0.5,
     # channel 2: elevator (reversed)
     -throttles.axis(3), # throttle
     # -joystick.axis(1),

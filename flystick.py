@@ -24,6 +24,7 @@ import pygame
 import signal
 import threading
 import time
+from lcd import LCD
 
 try:
     import pigpio
@@ -77,6 +78,8 @@ def shutdown(signum, frame):
 
 def main():
     global _output
+    global lcd
+    lcd = LCD()
 
     pygame.init()
 
@@ -138,6 +141,9 @@ def main():
                            pigpio.pulse(pi_gpio, 0, us - 300)]
                 pos += us
                 print us,value
+
+            lcd.lcd_string("roll " + str(int(_output[0] * 203 + 757)), lcd.LCD_LINE_1)
+            lcd.lcd_string("pitch " + str(int(_output[1] * 203 + 757)), lcd.LCD_LINE_2)
 
             # subcycle_time_us = 20k
             pulses += [pigpio.pulse(0, pi_gpio, 300),
