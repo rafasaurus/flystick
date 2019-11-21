@@ -142,8 +142,8 @@ def main():
                 pos += us
                 print us,value
 
-            lcd.lcd_string("roll " + str(int(_output[0] * 203 + 757)), lcd.LCD_LINE_1)
-            lcd.lcd_string("pitch " + str(int(_output[1] * 203 + 757)), lcd.LCD_LINE_2)
+            lcd.lcd_string("roll " + str(2 * int(_output[0] * 203 + 757)), lcd.LCD_LINE_1)
+            lcd.lcd_string("pitch " + str(2 * int(_output[1] * 203 + 757)), lcd.LCD_LINE_2)
 
             # subcycle_time_us = 20k
             pulses += [pigpio.pulse(0, pi_gpio, 300),
