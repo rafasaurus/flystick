@@ -17,7 +17,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 from flystick_config import (
-    CHANNELS, DISPLAY, DISPLAY_BRIGHTNESS, PPM_OUTPUT_PIN)
+    CHANNELS, DISPLAY, DISPLAY_BRIGHTNESS, PPM_OUTPUT_PIN, PWM_INITIAL_TRIM, PWM_DIFF)
 
 import logging
 import pygame
@@ -33,43 +33,9 @@ except ImportError as e:
     logging.warn("Failed to load pigpio library, running in debug mode")
     pigpio = None
 
-try:
-    import scrollphat
-except (ImportError, IOError) as e:
-    logging.warn(e, exc_info=True)
-    logging.warn("Failed to load Scroll pHAT library, you'll be missing all the fancy graphics")
-    scrollphat = None
-
-
 _running = False
 
 _output = ()
-
-
-def render():
-    # LED check
-    scrollphat.clear_buffer()
-    for col in range(0, 13):
-        if col > 1:
-            scrollphat.set_col(col - 2, 0)
-        if col < 11:
-            scrollphat.set_col(col, 0b11111)
-        scrollphat.update()
-        time.sleep(.1)
-
-    time.sleep(.3)
-
-    while _running:
-        scrollphat.clear_buffer()
-        # ``_output`` access should be thread-safe; de-referenced just once
-        for rend, value in zip(DISPLAY, _output):
-            try:
-                rend(value, scrollphat)
-            except ValueError as e:
-                logging.warn(e, exc_info=True)
-        scrollphat.update()
-        time.sleep(.05)
-
 
 def shutdown(signum, frame):
     global _running
@@ -101,14 +67,6 @@ def main():
     else:
         pi = None
 
-    if scrollphat:
-        scrollphat.clear()
-        scrollphat.set_brightness(DISPLAY_BRIGHTNESS)
-        # fork to avoid crash in case of I2C connection issues
-        th = threading.Thread(target=render)
-        th.daemon = True
-        th.start()
-
     prev = None
 
     while _running:
@@ -136,14 +94,14 @@ def main():
             for value in _output:
                 # calibrated with Taranis to [-99.6..0..99.4]
                 # us = int(round(750 + 300 * value))
-                us = int(round(757 + 203 * value))
+                us = int(round(PWM_INITIAL_TRIM/2 + PWM_DIFF/2 * value))
                 pulses += [pigpio.pulse(0, pi_gpio, 300),
                            pigpio.pulse(pi_gpio, 0, us - 300)]
                 pos += us
                 print us,value
 
-            lcd.lcd_string("roll " + str(2 * int(_output[0] * 203 + 757)), lcd.LCD_LINE_1)
-            lcd.lcd_string("pitch " + str(2 * int(_output[1] * 203 + 757)), lcd.LCD_LINE_2)
+            lcd.lcd_string("roll " + str(int(_output[0] * PWM_DIFF + PWM_INITIAL_TRIM)), lcd.LCD_LINE_1)
+            lcd.lcd_string("pitch " + str(int(_output[1] * PWM_DIFF + PWM_INITIAL_TRIM)), lcd.LCD_LINE_2)
 
             # subcycle_time_us = 20k
             pulses += [pigpio.pulse(0, pi_gpio, 300),
@@ -167,8 +125,6 @@ def main():
         # very sophisticated. (At this point, at least.)
         time.sleep(.02)
 
-    if scrollphat:
-        scrollphat.clear()
     if pi:
         pi.stop()
 

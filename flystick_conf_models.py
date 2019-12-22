@@ -32,6 +32,12 @@ class Ch(object):
         self.fn = fn
 
     def __call__(self, evts):
+        # if self.fn(evts) > 1900:
+        #     return 1900
+        # print "debugggg" 
+        # print self.fn(evts) 
+        # if self.fn(evts) > 1900:
+        #     return 1900
         return self.fn(evts)
 
     def __neg__(self):
@@ -41,6 +47,8 @@ class Ch(object):
         if isinstance(x, float):
             return Ch(lambda evts: self.fn(evts) + x)
         elif isinstance(x, Ch):
+            # print Ch(lambda evts: self.fn(evts) - x(evts))
+            # f = lambda x: if x==2 print x else raise Exception()
             return Ch(lambda evts: self.fn(evts) + x(evts))
         else:
             raise ValueError("Invalid positive offset %r" % (x,))
@@ -48,16 +56,20 @@ class Ch(object):
     def __sub__(self, x):
         if isinstance(x, float):
             return Ch(lambda evts: self.fn(evts) - x)
+            print "debug", x(evts)
         elif isinstance(x, Ch):
-            return Ch(lambda evts: self.fn(evts) - x(evts))
+            # return Ch(lambda evts: self.fn(evts) - x(evts))
+            print "debug", x(evts)
         else:
             raise ValueError("Invalid negative offset %r" % (x,))
 
     def __mul__(self, x):
         if isinstance(x, float):
             return Ch(lambda evts: self.fn(evts) * x)
+            print "debug", x(evts)
         elif isinstance(x, Ch):
             return Ch(lambda evts: self.fn(evts) * x(evts))
+            print "debug", x(evts)
         else:
             raise ValueError("Invalid weight %r" % (x,))
 
@@ -103,12 +115,14 @@ class Switch(object):
 
     def __call__(self, evts):
         for value in self.evt_map(evts):
+            if value >= 1 or value <= -1:
+                pass
             if value > 0:
-                self.pos = (self.pos + 1) % self.positions
+                self.pos += 1
             elif value < 0:
                 self.pos -= 1
-                if self.pos < 0:
-                    self.pos += self.positions
+                # if self.pos < 0:
+                #     self.pos += self.positions
             # ignore zero
         return 2. * self.pos / (self.positions - 1) - 1
 

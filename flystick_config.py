@@ -21,13 +21,15 @@ pitch_trim = joystick.hat_switch(hat=0, axis=1, positions=41, initial=20)
 # Pin map: http://wiki.mchobby.be/images/3/31/RASP-PIZERO-Correspondance-GPIO.jpg
 # (Connect this pin to the RC transmitter trainer port.)
 PPM_OUTPUT_PIN = 18
+PWM_INITIAL_TRIM = 1500
+PWM_DIFF = 400
 
 # Output (PPM) channels.
 CHANNELS = (
     # channel 1: aileron with trim
     # joystick.axis(0) + ail_trim * 0.5,
-    (-joystick.axis(0) + 0.1) * 0.7 + roll_trim * 0.5, # roll
-    (-joystick.axis(0) + 0.1) * 0.7 + pitch_trim * 0.5, # pitch
+    (joystick.axis(0) + 0.1) * 0.7 + roll_trim * 0.5, # roll
+    (-joystick.axis(1) + 0.1) * 0.7 + pitch_trim * 0.5, # pitch
     # a more elaborate example with reverse, offset, weight and trim:
     # (-joystick.axis(0) + 0.1) * 0.7 + ail_trim * 0.5,
     # channel 2: elevator (reversed)
