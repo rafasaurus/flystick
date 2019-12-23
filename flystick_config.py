@@ -28,8 +28,8 @@ PWM_DIFF = 400
 CHANNELS = (
     # channel 1: aileron with trim
     # joystick.axis(0) + ail_trim * 0.5,
-    (joystick.axis(0) + 0.1) * 0.7 + roll_trim * 0.5, # roll
-    (-joystick.axis(1) + 0.1) * 0.7 + pitch_trim * 0.5, # pitch
+    joystick.axis(0) + roll_trim * 0.1, # roll
+    joystick.axis(1) + pitch_trim * 0.1, # pitch
     # a more elaborate example with reverse, offset, weight and trim:
     # (-joystick.axis(0) + 0.1) * 0.7 + ail_trim * 0.5,
     # channel 2: elevator (reversed)
