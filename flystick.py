@@ -68,7 +68,8 @@ def main():
         pi = None
 
     prev = None
-
+    
+    counter = 0
     while _running:
         # clicks for advanced mapping
         clicks, hats = [], []
@@ -86,9 +87,17 @@ def main():
 
         if _output == prev:
             # do nothing
+            lcd.lcd_string("roll " + str(int(_output[0] * PWM_DIFF + PWM_INITIAL_TRIM)), lcd.LCD_LINE_1)
+            lcd.lcd_string("pitch " + str(int(_output[1] * PWM_DIFF + PWM_INITIAL_TRIM)), lcd.LCD_LINE_2)
             pass
 
         elif pigpio:
+            counter += 1
+            if counter >= 6:
+                counter = 0
+                lcd.lcd_string("roll " + str(int(_output[0] * PWM_DIFF + PWM_INITIAL_TRIM)), lcd.LCD_LINE_1)
+                lcd.lcd_string("pitch " + str(int(_output[1] * PWM_DIFF + PWM_INITIAL_TRIM)), lcd.LCD_LINE_2)
+
             pulses, pos = [], 0
             print " "
             for value in _output:
@@ -100,8 +109,8 @@ def main():
                 pos += us
                 print us,value
 
-            lcd.lcd_string("roll " + str(int(_output[0] * PWM_DIFF + PWM_INITIAL_TRIM)), lcd.LCD_LINE_1)
-            lcd.lcd_string("pitch " + str(int(_output[1] * PWM_DIFF + PWM_INITIAL_TRIM)), lcd.LCD_LINE_2)
+            # lcd.lcd_string("roll " + str(int(_output[0] * PWM_DIFF + PWM_INITIAL_TRIM)), lcd.LCD_LINE_1)
+            # lcd.lcd_string("pitch " + str(int(_output[1] * PWM_DIFF + PWM_INITIAL_TRIM)), lcd.LCD_LINE_2)
 
             # subcycle_time_us = 20k
             pulses += [pigpio.pulse(0, pi_gpio, 300),
