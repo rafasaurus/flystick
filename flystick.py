@@ -25,6 +25,7 @@ import signal
 import threading
 import time
 from lcd import LCD
+import sys
 
 try:
     import pigpio
@@ -40,7 +41,8 @@ _output = ()
 def shutdown(signum, frame):
     global _running
     _running = False
-
+    lcd.t_running = False
+    lcd.t.join()
 
 def main():
     global _output
@@ -86,6 +88,9 @@ def main():
 
         if _output == prev:
             # do nothing
+            lcd.lcd_string("r " + str(int(_output[0] * PWM_DIFF + PWM_INITIAL_TRIM)), lcd.LCD_LINE_1)
+            lcd.lcd_string("p " + str(int(_output[1] * PWM_DIFF + PWM_INITIAL_TRIM)), lcd.LCD_LINE_2)
+            time.sleep(0.2)
             pass
 
         elif pigpio:
@@ -100,9 +105,9 @@ def main():
                 pos += us
                 print us,value
 
-            lcd.lcd_string("roll " + str(int(_output[0] * PWM_DIFF + PWM_INITIAL_TRIM)), lcd.LCD_LINE_1)
-            lcd.lcd_string("pitch " + str(int(_output[1] * PWM_DIFF + PWM_INITIAL_TRIM)), lcd.LCD_LINE_2)
-
+            # lcd.lcd_string("r " + str(int(_output[0] * PWM_DIFF + PWM_INITIAL_TRIM)), lcd.LCD_LINE_1)
+            # lcd.lcd_string("p " + str(int(_output[1] * PWM_DIFF + PWM_INITIAL_TRIM)), lcd.LCD_LINE_2)
+              # 
             # subcycle_time_us = 20k
             pulses += [pigpio.pulse(0, pi_gpio, 300),
                        pigpio.pulse(pi_gpio, 0, 20000 - 300 - pos - 1)]
@@ -115,15 +120,12 @@ def main():
             if last:
                 pi.wave_delete(last)
 
-        else:
-            # debugging
-            print str(_output)
-
         prev = _output
 
         # NO BUSYLOOPING. And locking with ``pygame.event.wait`` doesn't sound
         # very sophisticated. (At this point, at least.)
         time.sleep(.02)
+        # lcd.t.join()
 
     if pi:
         pi.stop()

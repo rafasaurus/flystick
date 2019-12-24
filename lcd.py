@@ -1,10 +1,17 @@
+#!/usr/bin/python
 import smbus2 as smbus
 import time
+from threading import RLock, Thread
+import pdb
+
+lock = RLock()
 
 class LCD:
-
     def __init__(self):
         # Define some device parameters
+        self.message = "g"
+        self.line = 0
+        self.line = 0
         self.I2C_ADDR = 0x27     # I2C device address, if any error, change this address to 0x3f
         self.LCD_WIDTH = 16      # Maximum characters per line
         
@@ -29,6 +36,9 @@ class LCD:
         # bus = smbus.SMBus(0)  # Rev 1 Pi uses 0
         self.bus = smbus.SMBus(1)    # Rev 2 Pi uses 1
         self.lcd_init()
+        self.t_running = True
+        self.t = Thread(target=self.lcd_string_thread)
+        self.t.start()
     
     
     def lcd_init(self):
@@ -71,12 +81,22 @@ class LCD:
     
     def lcd_string(self, message, line):
         # Send string to display
-        message = message.ljust(self.LCD_WIDTH, " ")
-    
-        self.lcd_byte(line, self.LCD_CMD)
-    
-        for i in range(self.LCD_WIDTH):
-            self.lcd_byte(ord(message[i]), self.LCD_CHR)
+        lock.acquire()
+        self.message = message
+        self.line = line
+        lock.release()
+    def lcd_string_thread(self):
+        while self.t_running:
+            lock.acquire()
+            assert(self.message)
+            self.message = self.message.ljust(self.LCD_WIDTH, " ")
+        
+            self.lcd_byte(self.line, self.LCD_CMD)
+        
+            for i in range(self.LCD_WIDTH):
+                self.lcd_byte(ord(self.message[i]), self.LCD_CHR)
+            # time.sleep(0.2)
+            lock.release()
 
 
 if __name__ == '__main__':
