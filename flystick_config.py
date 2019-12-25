@@ -5,9 +5,14 @@ It was the cheapest joystick in my local electronics shop, and - as an added
 bonus - it had just the throttle lever I wanted.
 """
 from flystick_conf_models import *
-
-throttles = Joystick(0)
-joystick = Joystick(1)
+from lcd import LCD
+lcd = LCD()
+try:
+    throttles = Joystick(0)
+    joystick = Joystick(1)
+except:
+    lcd.lcd_string("UNPLUGGED", lcd.LCD_LINE_1)
+    lcd.lcd_string("PLUG JS & REBOOT", lcd.LCD_LINE_2)
 
 if throttles.get_name() != "Thrustmaster Throttle - HOTAS Warthog":
     throttles = Joystick(1)
@@ -41,6 +46,8 @@ CHANNELS = (
     # joystick.hat_switch(hat=0, axis=1, positions=5),
     # channels 5-8: buttons demo
     throttles.button(23),
+    joystick.axis(0),
+    joystick.axis(1),
 )
 
 # dual-channel display component

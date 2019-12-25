@@ -84,22 +84,25 @@ def main():
         # tuple to enforce immutability
         _output = tuple(max(min(ch((clicks, hats)), 1.), -1.)
                         for ch in CHANNELS)
+        # rll_trim = _output[0] * PWM_DIFF + PWM_INITIAL_TRIM
+        # ptch_trim = _output[1] * PWM_DIFF + PWM_INITIAL_TRIM
+        rll_trim = _output[0] * PWM_DIFF - _output[4] * 400
+        ptch_trim = _output[1] * PWM_DIFF - _output[5] * 400
 
         if _output == prev:
             # do nothing
-            lcd.lcd_string("roll " + str(int(_output[0] * PWM_DIFF + PWM_INITIAL_TRIM)), lcd.LCD_LINE_1)
-            lcd.lcd_string("pitch " + str(int(_output[1] * PWM_DIFF + PWM_INITIAL_TRIM)), lcd.LCD_LINE_2)
+            lcd.lcd_string("rll " + str(int(rll_trim)) + " t:" + str(int(_output[2] * PWM_DIFF + PWM_INITIAL_TRIM)), lcd.LCD_LINE_1)
+            lcd.lcd_string("ptch " + str(int(ptch_trim)) + " y:" + str(int(_output[3] * PWM_DIFF + PWM_INITIAL_TRIM)), lcd.LCD_LINE_2)
             pass
 
         elif pigpio:
             counter += 1
-            if counter >= 6:
+            if counter >= 40:
                 counter = 0
-                lcd.lcd_string("roll " + str(int(_output[0] * PWM_DIFF + PWM_INITIAL_TRIM)), lcd.LCD_LINE_1)
-                lcd.lcd_string("pitch " + str(int(_output[1] * PWM_DIFF + PWM_INITIAL_TRIM)), lcd.LCD_LINE_2)
+                lcd.lcd_string("rll " + str(int(rll_trim)) + " t:" + str(int(_output[2] * PWM_DIFF + PWM_INITIAL_TRIM)), lcd.LCD_LINE_1)
+                lcd.lcd_string("ptch " + str(int(ptch_trim)) + " y:" + str(int(_output[3] * PWM_DIFF + PWM_INITIAL_TRIM)), lcd.LCD_LINE_2)
 
             pulses, pos = [], 0
-            print " "
             for value in _output:
                 # calibrated with Taranis to [-99.6..0..99.4]
                 # us = int(round(750 + 300 * value))
@@ -107,7 +110,6 @@ def main():
                 pulses += [pigpio.pulse(0, pi_gpio, 300),
                            pigpio.pulse(pi_gpio, 0, us - 300)]
                 pos += us
-                print us,value
 
             # lcd.lcd_string("roll " + str(int(_output[0] * PWM_DIFF + PWM_INITIAL_TRIM)), lcd.LCD_LINE_1)
             # lcd.lcd_string("pitch " + str(int(_output[1] * PWM_DIFF + PWM_INITIAL_TRIM)), lcd.LCD_LINE_2)
@@ -123,10 +125,6 @@ def main():
             last, waves = waves[0], waves[1:]
             if last:
                 pi.wave_delete(last)
-
-        else:
-            # debugging
-            print str(_output)
 
         prev = _output
 
