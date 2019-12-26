@@ -28,13 +28,12 @@ pitch_trim = joystick.hat_switch(hat=0, axis=1, positions=41, initial=20)
 PPM_OUTPUT_PIN = 18
 PWM_INITIAL_TRIM = 1500
 PWM_DIFF = 400
-
 # Output (PPM) channels.
 CHANNELS = (
     # channel 1: aileron with trim
     # joystick.axis(0) + ail_trim * 0.5,
-    joystick.axis(0) + roll_trim * 0.1, # roll
-    joystick.axis(1) + pitch_trim * 0.1, # pitch
+    joystick.axis(0) + roll_trim * 0.2, # roll
+    joystick.axis(1) + pitch_trim * 0.2, # pitch
     # a more elaborate example with reverse, offset, weight and trim:
     # (-joystick.axis(0) + 0.1) * 0.7 + ail_trim * 0.5,
     # channel 2: elevator (reversed)
@@ -46,6 +45,14 @@ CHANNELS = (
     # joystick.hat_switch(hat=0, axis=1, positions=5),
     # channels 5-8: buttons demo
     throttles.button(23),
+    # buttons on the board
+    # 24 PDR_ALTM
+    # 16 FLOW_R
+    # 15 FUEL_NORM
+    throttles.button(24) * 0.3  + throttles.button(15) * 0.3 + throttles.button(16) * 0.3,
+    # TODO
+    # this is for calcultaing trim the difference
+    # not the best way, needs a refactoring
     joystick.axis(0),
     joystick.axis(1),
 )

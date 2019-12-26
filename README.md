@@ -58,3 +58,11 @@ When the Raspberry Pi Zero came out, it seemed like a perfect hardware component
 1. 5V &rarr; Raspberry Pi
 
 2. Raspberry PPM output &rarr; transmitter trainer port
+
+### Thrustmaster Notes
+
+jstest-gtk - joystick testing software
+sudo pigpiod - enable pigpio demon
+./flystick.py - run the code
+ps aux | grep PROCESS_NAME - for getting process id 
+kill -9 PROCESS_ID -  for killing the demon or a process

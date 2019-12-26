@@ -75,10 +75,10 @@ def main():
         clicks, hats = [], []
         for evt in pygame.event.get():
             if evt.type == pygame.JOYBUTTONDOWN:
-                #print "JOYBUTTONDOWN: %r\n%s" % (evt, dir(evt))
+                print "JOYBUTTONDOWN: %r\n%s" % (evt, dir(evt))
                 clicks.append(evt)
             elif evt.type == pygame.JOYHATMOTION and any(evt.value):
-                #print "JOYHATMOTION: %r\n%s" % (evt, dir(evt))
+                print "JOYHATMOTION: %r\n%s" % (evt, dir(evt))
                 hats.append(evt)
 
         # tuple to enforce immutability
@@ -86,21 +86,23 @@ def main():
                         for ch in CHANNELS)
         # rll_trim = _output[0] * PWM_DIFF + PWM_INITIAL_TRIM
         # ptch_trim = _output[1] * PWM_DIFF + PWM_INITIAL_TRIM
-        rll_trim = _output[0] * PWM_DIFF - _output[4] * 400
-        ptch_trim = _output[1] * PWM_DIFF - _output[5] * 400
-
+        rll_trim = (_output[0] - _output[5]) * 100
+        ptch_trim = (_output[1] - _output[6]) * 100
         if _output == prev:
             # do nothing
-            lcd.lcd_string("rll " + str(int(rll_trim)) + " t:" + str(int(_output[2] * PWM_DIFF + PWM_INITIAL_TRIM)), lcd.LCD_LINE_1)
-            lcd.lcd_string("ptch " + str(int(ptch_trim)) + " y:" + str(int(_output[3] * PWM_DIFF + PWM_INITIAL_TRIM)), lcd.LCD_LINE_2)
+            if not prev_rll_trim == rll_trim or prev_ptch_trim == ptch_trim:
+                lcd.lcd_string("rll " + str(int(rll_trim)) + "%", lcd.LCD_LINE_1)
+                lcd.lcd_string("ptch " + str(int(ptch_trim)) + "%", lcd.LCD_LINE_2)
+                # lcd.lcd_string("rll " + str(int(rll_trim)) + " t:" + str(int(_output[2] * PWM_DIFF + PWM_INITIAL_TRIM)), lcd.LCD_LINE_1)
+                # lcd.lcd_string("ptch " + str(int(ptch_trim)) + " y:" + str(int(_output[3] * PWM_DIFF + PWM_INITIAL_TRIM)), lcd.LCD_LINE_2)
             pass
 
         elif pigpio:
-            counter += 1
-            if counter >= 40:
-                counter = 0
-                lcd.lcd_string("rll " + str(int(rll_trim)) + " t:" + str(int(_output[2] * PWM_DIFF + PWM_INITIAL_TRIM)), lcd.LCD_LINE_1)
-                lcd.lcd_string("ptch " + str(int(ptch_trim)) + " y:" + str(int(_output[3] * PWM_DIFF + PWM_INITIAL_TRIM)), lcd.LCD_LINE_2)
+            # counter += 1
+            # if counter >= 90:
+            #     counter = 0
+            #     lcd.lcd_string("rll " + str(int(rll_trim)) + " t:" + str(int(_output[2] * PWM_DIFF + PWM_INITIAL_TRIM)), lcd.LCD_LINE_1)
+            #     lcd.lcd_string("ptch " + str(int(ptch_trim)) + " y:" + str(int(_output[3] * PWM_DIFF + PWM_INITIAL_TRIM)), lcd.LCD_LINE_2)
 
             pulses, pos = [], 0
             for value in _output:
@@ -121,16 +123,19 @@ def main():
             pi.wave_add_generic(pulses)
             waves.append(pi.wave_create())
             pi.wave_send_using_mode(waves[-1], pigpio.WAVE_MODE_REPEAT_SYNC)
+            # debug
+            # print _output[0] - _output[5], " ", _output[0], " ", _output[5]
 
             last, waves = waves[0], waves[1:]
             if last:
                 pi.wave_delete(last)
 
         prev = _output
-
+        prev_rll_trim = rll_trim
+        prev_ptch_trim = ptch_trim
         # NO BUSYLOOPING. And locking with ``pygame.event.wait`` doesn't sound
         # very sophisticated. (At this point, at least.)
-        time.sleep(.02)
+        # time.sleep(.02)
 
     if pi:
         pi.stop()
