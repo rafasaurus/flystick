@@ -41,6 +41,7 @@ CHANNELS = (
     # joystick.hat_switch(hat=0, axis=1, positions=5),
     # channels 5-8: buttons demo
     throttles.button(23),
+    throttles.button(24) * 0.3  + throttles.button(15) * 0.3 + throttles.button(16) * 0.3,
 )
 
 # dual-channel display component
