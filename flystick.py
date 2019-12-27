@@ -68,6 +68,8 @@ def main():
         pi = None
 
     prev = None
+    prev_rll_trim = None
+    prev_ptch_trim = None
     
     counter = 0
     while _running:
@@ -75,10 +77,10 @@ def main():
         clicks, hats = [], []
         for evt in pygame.event.get():
             if evt.type == pygame.JOYBUTTONDOWN:
-                print "JOYBUTTONDOWN: %r\n%s" % (evt, dir(evt))
+                # print "JOYBUTTONDOWN: %r\n%s" % (evt, dir(evt))
                 clicks.append(evt)
             elif evt.type == pygame.JOYHATMOTION and any(evt.value):
-                print "JOYHATMOTION: %r\n%s" % (evt, dir(evt))
+                # print "JOYHATMOTION: %r\n%s" % (evt, dir(evt))
                 hats.append(evt)
 
         # tuple to enforce immutability
@@ -86,35 +88,34 @@ def main():
                         for ch in CHANNELS)
         # rll_trim = _output[0] * PWM_DIFF + PWM_INITIAL_TRIM
         # ptch_trim = _output[1] * PWM_DIFF + PWM_INITIAL_TRIM
-        rll_trim = (_output[0] - _output[5]) * 100
-        ptch_trim = (_output[1] - _output[6]) * 100
-        if _output == prev:
-            # do nothing
-            if not prev_rll_trim == rll_trim or prev_ptch_trim == ptch_trim:
-                lcd.lcd_string("rll " + str(int(rll_trim)) + "%", lcd.LCD_LINE_1)
-                lcd.lcd_string("ptch " + str(int(ptch_trim)) + "%", lcd.LCD_LINE_2)
-                # lcd.lcd_string("rll " + str(int(rll_trim)) + " t:" + str(int(_output[2] * PWM_DIFF + PWM_INITIAL_TRIM)), lcd.LCD_LINE_1)
-                # lcd.lcd_string("ptch " + str(int(ptch_trim)) + " y:" + str(int(_output[3] * PWM_DIFF + PWM_INITIAL_TRIM)), lcd.LCD_LINE_2)
-            pass
+        rll_trim = int((_output[0] - _output[5]) * 100) # convert to %
+        ptch_trim = int((_output[1] - _output[6]) * 100)
 
-        elif pigpio:
-            # counter += 1
-            # if counter >= 90:
-            #     counter = 0
-            #     lcd.lcd_string("rll " + str(int(rll_trim)) + " t:" + str(int(_output[2] * PWM_DIFF + PWM_INITIAL_TRIM)), lcd.LCD_LINE_1)
-            #     lcd.lcd_string("ptch " + str(int(ptch_trim)) + " y:" + str(int(_output[3] * PWM_DIFF + PWM_INITIAL_TRIM)), lcd.LCD_LINE_2)
-
+        # Update if changed trim
+        if prev_rll_trim != rll_trim or prev_ptch_trim != ptch_trim:
+            lcd.lcd_string("rll " + str(int(rll_trim)) + "%", lcd.LCD_LINE_1)
+            lcd.lcd_string("ptch " + str(int(ptch_trim)) + "%", lcd.LCD_LINE_2)
+        # if _output == prev:
+        #     # do nothing
+        #     pass
+        #
+        # elif pigpio:
+        if pigpio:
             pulses, pos = [], 0
+            index_tuple = 0
             for value in _output:
-                # calibrated with Taranis to [-99.6..0..99.4]
-                # us = int(round(750 + 300 * value))
-                us = int(round(PWM_INITIAL_TRIM/2 + PWM_DIFF/2 * value))
-                pulses += [pigpio.pulse(0, pi_gpio, 300),
-                           pigpio.pulse(pi_gpio, 0, us - 300)]
-                pos += us
-
-            # lcd.lcd_string("roll " + str(int(_output[0] * PWM_DIFF + PWM_INITIAL_TRIM)), lcd.LCD_LINE_1)
-            # lcd.lcd_string("pitch " + str(int(_output[1] * PWM_DIFF + PWM_INITIAL_TRIM)), lcd.LCD_LINE_2)
+                # exclude 5,6 channels from being pwm channel
+                if index_tuple == 5 or index_tuple == 6 and 0:
+                    # do nothing, exclude 6th and 7th channels
+                    pass
+                else:
+                    # calibrated with Taranis to [-99.6..0..99.4]
+                    # us = int(round(750 + 300 * value))
+                    us = int(round(PWM_INITIAL_TRIM/2 + PWM_DIFF/2 * value))
+                    pulses += [pigpio.pulse(0, pi_gpio, 300),
+                               pigpio.pulse(pi_gpio, 0, us - 300)]
+                    pos += us
+                index_tuple += 1
 
             # subcycle_time_us = 20k
             pulses += [pigpio.pulse(0, pi_gpio, 300),
@@ -123,8 +124,6 @@ def main():
             pi.wave_add_generic(pulses)
             waves.append(pi.wave_create())
             pi.wave_send_using_mode(waves[-1], pigpio.WAVE_MODE_REPEAT_SYNC)
-            # debug
-            # print _output[0] - _output[5], " ", _output[0], " ", _output[5]
 
             last, waves = waves[0], waves[1:]
             if last:
