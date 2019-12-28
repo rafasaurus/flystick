@@ -17,7 +17,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 from flystick_config import (
-    CHANNELS, DISPLAY, DISPLAY_BRIGHTNESS, PPM_OUTPUT_PIN, PWM_INITIAL_TRIM, PWM_DIFF)
+    CHANNELS, DISPLAY, DISPLAY_BRIGHTNESS, PPM_OUTPUT_PIN, PWM_INITIAL_TRIM, PWM_DIFF, JOYSTICK_ROLL_TRIM_CHANNEL, JOYSTICK_PITCH_TRIM_CHANNEL, isLcd)
 
 import logging
 import pygame
@@ -44,8 +44,11 @@ def shutdown(signum, frame):
 
 def main():
     global _output
-    global lcd
-    lcd = LCD()
+    try:
+        global lcd
+        lcd = LCD()
+    except:
+        print("could not init lcd")
 
     pygame.init()
 
@@ -88,13 +91,16 @@ def main():
                         for ch in CHANNELS)
         # rll_trim = _output[0] * PWM_DIFF + PWM_INITIAL_TRIM
         # ptch_trim = _output[1] * PWM_DIFF + PWM_INITIAL_TRIM
-        rll_trim = int((_output[0] - _output[5]) * 100) # convert to %
-        ptch_trim = int((_output[1] - _output[6]) * 100)
+        rll_trim = int((_output[0] - _output[JOYSTICK_ROLL_TRIM_CHANNEL]) * 100) # convert to %
+        ptch_trim = int((_output[1] - _output[JOYSTICK_PITCH_TRIM_CHANNEL]) * 100)
 
         # Update if changed trim
-        if prev_rll_trim != rll_trim or prev_ptch_trim != ptch_trim:
-            lcd.lcd_string("rll " + str(int(rll_trim)) + "%", lcd.LCD_LINE_1)
-            lcd.lcd_string("ptch " + str(int(ptch_trim)) + "%", lcd.LCD_LINE_2)
+        try:
+            if prev_rll_trim != rll_trim or prev_ptch_trim != ptch_trim:
+                lcd.lcd_string("rll " + str(int(rll_trim)) + "%", lcd.LCD_LINE_1)
+                lcd.lcd_string("ptch " + str(int(ptch_trim)) + "%", lcd.LCD_LINE_2)
+        except:
+            pass
         # if _output == prev:
         #     # do nothing
         #     pass
@@ -105,7 +111,7 @@ def main():
             index_tuple = 0
             for value in _output:
                 # exclude 5,6 channels from being pwm channel
-                if index_tuple == 5 or index_tuple == 6 and 0:
+                if index_tuple == JOYSTICK_ROLL_TRIM_CHANNEL or index_tuple == JOYSTICK_PITCH_TRIM_CHANNEL and 0:
                     # do nothing, exclude 6th and 7th channels
                     pass
                 else:

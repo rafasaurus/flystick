@@ -5,14 +5,19 @@ It was the cheapest joystick in my local electronics shop, and - as an added
 bonus - it had just the throttle lever I wanted.
 """
 from flystick_conf_models import *
-from lcd import LCD
-lcd = LCD()
+isLcd = True
+try:
+    from lcd import LCD
+    lcd = LCD()
+except:
+    print("could not init display")
 try:
     throttles = Joystick(0)
     joystick = Joystick(1)
 except:
-    lcd.lcd_string("UNPLUGGED", lcd.LCD_LINE_1)
-    lcd.lcd_string("PLUG JS & REBOOT", lcd.LCD_LINE_2)
+    if (isLcd):
+        lcd.lcd_string("UNPLUGGED", lcd.LCD_LINE_1)
+        lcd.lcd_string("PLUG JS & REBOOT", lcd.LCD_LINE_2)
 
 if throttles.get_name() != "Thrustmaster Throttle - HOTAS Warthog":
     throttles = Joystick(1)
@@ -29,6 +34,8 @@ PPM_OUTPUT_PIN = 18
 PWM_INITIAL_TRIM = 1500
 PWM_DIFF = 400
 # Output (PPM) channels.
+JOYSTICK_ROLL_TRIM_CHANNEL = 8
+JOYSTICK_PITCH_TRIM_CHANNEL = 9
 CHANNELS = (
     # channel 1: aileron with trim
     # joystick.axis(0) + ail_trim * 0.5,
@@ -50,11 +57,14 @@ CHANNELS = (
     # 16 FLOW_R
     # 15 FUEL_NORM
     throttles.button(24) * 0.3  + throttles.button(15) * 0.3 + throttles.button(16) * 0.3,
+    throttles.button(19),
+    joystick.button(11) * 0.5 + joystick.button(13) * -0.5,
+    joystick.button(10) * -0.5 + joystick.button(12) * 0.5,
     # TODO
     # this is for calcultaing trim the difference
     # not the best way, needs a refactoring
     joystick.axis(0),
-    joystick.axis(1),
+    joystick.axis(1)
 )
 
 # dual-channel display component
